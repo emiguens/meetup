@@ -1,0 +1,113 @@
+Clean HTTP Handlers in Go
+Golang meetup - Buenos Aires, Argentina
+19 Oct 2017
+Tags: golang, apis, http, meetup
+
+Eduardo Acosta Miguens
+eduardo.miguens@mercadolibre.com
+https://github.com/emiguens
+
+* HTTP Handler Común
+
+.code examples/example1.go
+
+
+* HTTP Handler (Devuelve error)
+
+.code examples/example2.go
+
+
+* HTTP Handler (Arreglado!)
+
+.code examples/example3.go /START 1/,/END 1/ HLxxx
+
+
+* Responder un JSON
+
+.code examples/example4.go /START 1/,/END 1/ HLxxx
+
+
+* Al final...
+
+.code examples/example5.go /START 1/,/END 1/ HLxxx
+
+
+* Tiene que haber una manera mejor
+
+
+* Propuesta: Custom HTTP Handlers
+
+Queremos handlers que sean: 
+- Simples de leer 
+- Difícil equivocarse
+- Claros en su flujo
+
+.code examples/proposal.go /START 1/,/END 1/ HLxxx
+
+* Antes de seguir... cómo funcionan los HTTP handlers en Go?
+
+* 
+
+.link https://golang.org/src/net/http/server.go#L58 net/http/server.go:58
+.code examples/handlers.go /START 1/,/END 1/ HLxxx
+
+.link https://golang.org/src/net/http/server.go#L1910 net/http/server.go:1910
+.code examples/handlers.go /START 2/,/END 2/ HLxxx
+
+
+* Creamos nuestro propio adapter
+Usamos la misma lógica que `http.HandlerFunc`
+
+.code examples/adapter/adapter.go /START 1/,/END 1/
+
+
+* Implementamos ServeHTTP sobre nuestro nuevo tipo
+
+.code examples/adapter/adapter.go /START 2/,/END 2/
+
+
+* Agregamos helpers para devolver contenido
+
+.code examples/adapter/adapter.go /START 3/,/END 3/
+
+
+* También para JSON
+
+.code examples/adapter/adapter.go /START 4/,/END 4/
+
+
+* Cómo queda todo junto?
+
+
+* 
+.code final/main.go /START 1/,/END 1/ HLxxx
+
+
+* Compatibilidad con la librería estándar
+
+Cómo el adapter encapsula al handler y lo "transforma" a un `http.Handler`, podemos utilizar cualquier middleware creado para la librería estándar sin problema.
+
+.code final/main.go /START 2/,/END 2/
+
+Lo usamos normalmente:
+
+    http.Handle("/", logger(Action(Index)))
+
+
+* Oportunidades de mejora
+
+- Crear una interfaz para utilizar como respuesta en vez de un tipo concreto.
+- Mejorar los helpers para que tengan mas lógica de negocio y simplifiquen aun mas el handler.
+- Agregar un Contexto propio a cada request que encapsule las cosas que usamos siempre (Transacción de NewRelic/Datadog).
+- ...
+
+La idea era mostrar que es fácil adaptar los handlers de la librería estándar para que se adecuen a nuestra necesidad. 
+
+Si vemos que estamos repitiendo código, o que hay cosas que son propensas a errores, Go nos deja encapsular fácilmente. 
+
+
+* Inspirado en:
+
+.link https://blog.bartfokker.nl/clean-handlers/ Clean http handlers in Go
+.link https://elithrar.github.io/article/custom-handlers-avoiding-globals/ Custom Handlers and Avoiding Globals in Go
+.link https://elithrar.github.io/article/http-handler-error-handling-revisited/ http.Handler and Error Handling in Go 
